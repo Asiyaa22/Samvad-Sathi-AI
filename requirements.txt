@@ -5,3 +5,4 @@ PyPDF2
 deepgram-sdk
 openai
 g2p-en
+sqlalchemy

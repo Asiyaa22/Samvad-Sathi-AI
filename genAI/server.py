@@ -1,23 +1,38 @@
-from fastapi import FastAPI,UploadFile, File, HTTPException, Body, Request
+from fastapi import FastAPI,UploadFile, File, HTTPException, Body, Request, Form, Depends
 from fastapi.responses import JSONResponse
 from typing import Optional
 from dotenv import load_dotenv
-from prompts import extract_resume_template,gen_question_template,analyze_text_template,analyze_answer_template
+from prompts import extract_resume_template,gen_question_template,analyze_text_template,analyze_answer_template, gen_questions_from_knowledge_set_template
 from pydantic import BaseModel
 import PyPDF2
 from deepgram import DeepgramClient, PrerecordedOptions, FileSource
 from fastapi.middleware.cors import CORSMiddleware
 from openai import OpenAI
 from g2p_en import G2p
+from sqlalchemy.orm import Session
+from database import SessionLocal, engine
+from models import Base, User
 import json
 import time
 import io
 import os
 
+#Initialize Database
+Base.metadata.create_all(bind=engine)
+
 load_dotenv()
 dg_client = DeepgramClient(os.getenv("DEEPGRAM_API_KEY"))
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 g2p = G2p()
+
+
+#Depedency to get Db session
+def get_db_session():
+    db = SessionLocal()
+    try: 
+        yield db
+    finally:
+        db.close()
 
 def call_llm(prompt: str, system:str = None,model: str = "gpt-4o-mini", temperature: float = 0.7) -> str:
     try:
@@ -92,7 +107,7 @@ app.add_middleware(
 async def extract_text_from_pdf(file: UploadFile = File(...)):
     if not file.filename.endswith(".pdf"):
         raise HTTPException(status_code=400, detail="Only PDF files are supported.")
-
+    
     try:
         contents = await file.read()
         pdf_reader = PyPDF2.PdfReader(io.BytesIO(contents))
@@ -291,3 +306,129 @@ async def analyse_answer(user_profile:dictRequest = Body(...), payload: AnalyseA
     response = call_llm(prompt=prompt)
     json_res = extract_json_dict(response)
     return JSONResponse(content=json_res)
+
+
+#generate knowledge set function 
+def generate_knowledge_set(skill: str):
+    """
+    Given a single skill, generate 5 deep technical concepts using LLM.
+
+    Args:
+        skill (str): One technical skill (e.g., React)
+
+    Returns:
+        list: List of 5 concepts
+    """
+
+    # Inject skill correctly using f-string
+    prompt = (
+        f"List down top 5 important technical concepts from the given skill '{skill}'. "
+        "These should be topics useful for interviews. Return a JSON array only."
+        "Return your answer in this format:\n"
+        "Return your answer in **this exact JSON format**:\n"
+        "[\"Concept 1\", \"Concept 2\", \"Concept 3\", \"Concept 4\", \"Concept 5\"]\n"
+    )
+
+    response = call_llm(prompt=prompt)
+
+    try:
+        concepts = extract_json_dict(response)
+    except:
+        # fallback: clean up bullet points if LLM doesn't return valid JSON
+        concepts = [line.strip("- ").strip() for line in response.split("\n") if line.strip()]
+
+    return concepts
+
+class SkillsInput(BaseModel):
+    skills: list
+#creating Knowledge set
+@app.post("/create-knowledge-set")
+async def create_knowledge_set(payload: SkillsInput):
+    skills = payload.skills
+
+    if not skills:
+        raise HTTPException(status_code=400, detail="No skills provided.")
+
+    result = []
+
+    for skill in skills:
+        concepts = generate_knowledge_set(skill)
+        result.append({
+            "skill": skill,
+            "concepts": concepts
+        })
+
+    return result
+
+
+
+class KnowledgeSetQuestionRequest(BaseModel):
+    knowledge_set: list
+    number_of_questions: int
+#Generate questions from knowledge set
+@app.post("/generate-questions-from-knowledge-set")
+async def generate_questions_from_knowledge_set(payload: KnowledgeSetQuestionRequest):
+    """
+    Generate interview questions from a structured knowledge set
+    """
+    knowledge_set = payload.knowledge_set
+    n = payload.number_of_questions
+
+    if not knowledge_set or n <= 0:
+        raise HTTPException(status_code=400, detail="Invalid knowledge set or number of questions.")
+    # Format knowledge set as string for LLM
+    formatted_knowledge = json.dumps(knowledge_set, indent=2)
+
+    prompt = gen_questions_from_knowledge_set_template.format(
+        n=n,
+        knowledge_set=formatted_knowledge
+    )
+
+    system_message = "You generate technical interview questions from a structured knowledge set."
+
+    try:
+        response = call_llm(system=system_message, prompt=prompt)
+        questions = extract_json_dict(response)
+        return JSONResponse(content={"questions": questions})
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error generating questions: {e}")
+
+# Create a folder for resume uploads if not exists
+UPLOAD_DIR = "uploads"
+os.makedirs(UPLOAD_DIR, exist_ok=True)
+
+#Onbaoard API
+@app.post("/onboard")
+async def onboard_user(
+    name : str = Form(...),
+    university : str = Form(...),
+    degree : str = Form(...),
+    age : int = Form(...),
+    gender : str = Form(...),
+    job_role : str = Form(...),
+    experience_years : int = Form(...),
+    resume : UploadFile = File(...),
+    db : Session = Depends(get_db_session)
+):
+
+# save resume files
+    file_location = f"{UPLOAD_DIR}/{resume.filename}"
+    with open(file_location, "wb") as f:
+        f.write(await resume.read())
+
+#save user data to db
+    user = User(
+        name=name,
+        university=university,
+        degree=degree,
+        age=age,
+        gender=gender,
+        job_role=job_role,
+        experience_years=experience_years,
+        resume_filename=resume.filename
+    )
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+
+    return {"message": "User onboarded successfully", "user_id": user.id}

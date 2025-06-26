@@ -111,3 +111,26 @@ Output Format (JSON):
   "follow_up_question": "Question targeting resume/role alignment"
 }}
 '''
+
+
+#prompt for generating questions from knowledge set
+
+gen_questions_from_knowledge_set_template = """
+You are an interview assistant.
+
+Given the following knowledge set, generate {n} technical interview questions. Each question should be related to a specific concept from the skills listed.
+
+Here is the knowledge set:
+{knowledge_set}
+
+Return your output in this JSON format:
+[
+  {{
+    "question": "Write the question here?",
+    "skill": "Skill name",
+    "concept": "Concept name"
+  }},
+  ...
+]
+Do not include explanations or anything else, just return the JSON array.
+"""
