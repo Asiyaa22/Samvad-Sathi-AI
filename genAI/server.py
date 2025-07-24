@@ -11,7 +11,10 @@ from openai import OpenAI
 from g2p_en import G2p
 from sqlalchemy.orm import Session
 from database import SessionLocal, engine
-from models import Base, User
+from genAI.users.models import Base, User, User_profile
+from google.oauth2 import id_token
+from google.auth.transport import requests as grequests
+# from database import get_db
 import json
 import time
 import io
@@ -24,6 +27,7 @@ load_dotenv()
 dg_client = DeepgramClient(os.getenv("DEEPGRAM_API_KEY"))
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 g2p = G2p()
+GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
 
 
 #Depedency to get Db session
@@ -392,43 +396,3 @@ async def generate_questions_from_knowledge_set(payload: KnowledgeSetQuestionReq
         return JSONResponse(content={"questions": questions})
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error generating questions: {e}")
-
-# Create a folder for resume uploads if not exists
-UPLOAD_DIR = "uploads"
-os.makedirs(UPLOAD_DIR, exist_ok=True)
-
-#Onbaoard API
-@app.post("/onboard")
-async def onboard_user(
-    name : str = Form(...),
-    university : str = Form(...),
-    degree : str = Form(...),
-    age : int = Form(...),
-    gender : str = Form(...),
-    job_role : str = Form(...),
-    experience_years : int = Form(...),
-    resume : UploadFile = File(...),
-    db : Session = Depends(get_db_session)
-):
-
-# save resume files
-    file_location = f"{UPLOAD_DIR}/{resume.filename}"
-    with open(file_location, "wb") as f:
-        f.write(await resume.read())
-
-#save user data to db
-    user = User(
-        name=name,
-        university=university,
-        degree=degree,
-        age=age,
-        gender=gender,
-        job_role=job_role,
-        experience_years=experience_years,
-        resume_filename=resume.filename
-    )
-    db.add(user)
-    db.commit()
-    db.refresh(user)
-
-    return {"message": "User onboarded successfully", "user_id": user.id}
