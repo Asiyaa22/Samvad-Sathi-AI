@@ -19,7 +19,7 @@ Samvaad Saathi is an AI-powered ed-tech platform designed to simulate real inter
 ---
 
 ## 📁 Folder Structure Overview
-
+```
 Samvaad-Saathi-AI/
 │
 ├── genAI/
@@ -46,7 +46,7 @@ Samvaad-Saathi-AI/
 ├── requirements.txt # Project dependencies
 └── README.md # Project documentation (this file)
 
-
+```
 ---
 
 ## 🧩 Modules Explained
