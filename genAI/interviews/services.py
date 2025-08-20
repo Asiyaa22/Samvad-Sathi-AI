@@ -5,7 +5,7 @@ from interviews.models import Interview, Question, InterviewAttempt, QuestionAtt
 from fastapi import HTTPException
 from interviews.schemas import AnswerSubmission
 from core.llm import process_resume_from_s3_and_generate_questions
-from core.sqs import publish_to_analysis_queue  # Assume core utils
+from core.analysis_sqs import publish_to_analysis_queue  # Assume core utils
 
 async def start_interview(db: Session, payload):
     # Create interview entry

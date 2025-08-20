@@ -11,7 +11,7 @@ router = APIRouter()
 # ✅ Create a new login session
 # sirf session create karne ka endpoint
 #noun best practise
-@router.post("/session/login", response_model=SessionOut)
+@router.post("/login", response_model=SessionOut)
 def login_session(payload: SessionCreate, db: Session = Depends(get_db_session)):
     session = create_session(db, email=payload.email, password=payload.password)
 
@@ -23,7 +23,7 @@ def login_session(payload: SessionCreate, db: Session = Depends(get_db_session))
     }
 
 # ✅ End an active session
-@router.post("/session/logout", response_model=SessionEndResponse)
+@router.post("/logout", response_model=SessionEndResponse)
 def logout_session(payload: SessionEndRequest, db: Session = Depends(get_db_session)):
     """
     Ends the active session for the given user ID.
