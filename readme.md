@@ -67,7 +67,6 @@ The backend is built with FastAPI + PostgreSQL, powered by LLM-based analysis fo
 | workers/ | Long-running background tasks – transcription, analysis. |
 | prompts/ | All reusable LLM prompt templates. |
 
-
 2. High-Level Flow  
 
 1.Sign Up & Login
