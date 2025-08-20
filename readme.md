@@ -1,122 +1,125 @@
-# 🧠 Samvaad Saathi — AI-Powered Interview Simulator
+Samvaad Saathi – AI Interview Coach 
 
-Samvaad Saathi is an AI-powered ed-tech platform designed to simulate real interview environments. It enables students to practice interviews, receive automated questions, submit responses (voice/text), and get intelligent feedback powered by LLMs.
+Samvaad Saathi is an AI-powered interview simulation and coaching platform.
+It helps students and professionals practice real interviews, get feedback on their answers, and improve communication skills.
 
-> ⚠️ This is a **development branch** maintained by **Asiya Hashmi**, built on top of the **main repository** maintained by **Smit**.  
-> The overall architecture and core features remain the same, but this branch focuses on modularizing and scaling backend functionalities.
+The backend is built with FastAPI + PostgreSQL, powered by LLM-based analysis for question generation, audio transcription, and performance evaluation.
 
----
-
-## 🚀 Tech Stack
-
-- **Backend**: FastAPI
-- **LLM Integration**: OpenAI / Custom prompts
-- **Database**: PostgreSQL (via SQLAlchemy ORM)
-- **Queueing**: AWS SQS (for async tasks like audio transcription & analysis)
-- **Deployment**: AWS EC2 (Monolith Decoupled Architecture)
-- **Others**: Pytest for testing (in progress)
-
----
-
-## 📁 Folder Structure Overview
-```
-Samvaad-Saathi-AI/
+1. Directory Structure
+.
+├── app/
+│   ├── main.py              # FastAPI entrypoint
+│   │
+│   ├── users/               # User registration & profile management
+│   │   ├── models.py        # SQLAlchemy models
+│   │   ├── schemas.py       # Pydantic schemas
+│   │   ├── services.py      # Business logic
+│   │   └── routes.py        # API routes
+│   │
+│   ├── sessions/            # Login / Logout handling
+│   │   ├── models.py
+│   │   ├── schemas.py
+│   │   ├── services.py
+│   │   └── routes.py
+│   │
+│   ├── interviews/          # Interview workflow (create, start questions, answers)
+│   │   ├── models.py
+│   │   ├── schemas.py
+│   │   ├── services.py
+│   │   └── routes.py
+│   │
+│   ├── reports/             # Final performance report generation
+│   │   ├── models.py
+|   |   ├── schemas.py
+│   │   ├── services.py
+│   │   └── routes.py
+│   │
+│   ├── core/                # Shared utilities
+│   │   ├── llm.py           # OpenAI calls
+│   │   ├── analysis_sqs.py  # Analysis AWS SQS integration
+│   │   ├── report_sqs.py    # Report AWS SQS integration
+│   ├── prompts/             # All system / user prompts for LLMs
+|   |   └── prompts.py
+│   │
+│   ├── workers/             # Background workers for async processing
+│   │   ├── transcription_worker.py
+│   │   └── analysis_worker.py
+│   │
+│   │
+│   └── database.py          # Database session + engine
 │
-├── genAI/
-│ ├── interviews/
-│ │ ├── models.py # SQLAlchemy models for Interview, Question, Attempts
-│ │ ├── schemas.py # Pydantic schemas for request/response validation
-│ │ ├── services.py # Core business logic for interview workflows
-│ │ ├── routes.py # FastAPI routes for interview-related APIs
-│ │
-│ ├── users/ # (Completed) User registration and authentication
-│ ├── sessions/ # (Completed) Session creation and login logic
-│ │
-│ ├── core/
-│ │ ├── llm.py # Functions for LLM calls (e.g., question generation, analysis)
-│ │ ├── sqs.py # SQS queue helpers for sending/receiving messages
-│ │ └── prompts.py # Centralized LLM prompt templates for interviews & analysis
-│ │
-│ ├── workers/
-│ │ └── analysis_worker.py # Worker to process SQS messages: transcribe + analyze answers
-│
-├── tests/ # (To be added) Unit and integration tests
-│
-├── main.py # FastAPI app entry point
-├── requirements.txt # Project dependencies
-└── README.md # Project documentation (this file)
-
-```
----
-
-## 🧩 Modules Explained
-
-### 🔹 `interviews/`
-Handles the full interview lifecycle:
-- Start new interview sessions
-- Fetch next questions
-- Submit and track answers
-- Mark interview as complete
-
-**Files:**
-- `models.py`: Database tables — Interview, Question, Attempts
-- `schemas.py`: Input/output models using Pydantic
-- `services.py`: Functions for each interview action (start, next Q, submit)
-- `routes.py`: API endpoints for frontend/backend integration
-
----
-
-### 🔹 `core/`
-Utility and shared logic modules:
-- `llm.py`: Calls OpenAI for generating questions and evaluating answers
-- `prompts.py`: Houses reusable LLM prompt templates
-- `sqs.py`: Manages AWS SQS queues for async processing (like transcription/analysis)
-
----
-
-### 🔹 `workers/`
-Background workers to handle time-consuming tasks:
-- `analysis_worker.py`: 
-  - Pulls messages from SQS
-  - Transcribes audio answers
-  - Analyzes response via LLM
-  - Persists feedback in DB
-
----
-
-### 🔹 `users/` & `sessions/`
-Authentication and user/session management:
-- User registration & login
-- Session tracking
-
----
-
-## 🏗️ Architecture
-
-This project follows a **Decoupled Monolith Architecture**:
-- Modular services (but deployed together)
-- Clear separation of concerns
-- Easy to scale/refactor into microservices later
-
-Async-heavy tasks (e.g., audio analysis) are **decoupled via queues** and background workers to keep the app fast and responsive.
-
----
-
-## 🧪 Branch Info
-
-This branch is being developed by **Asiya Farhath** under Barabari’s development team.  
-Key objectives of this branch:
-- Refactor legacy monolith (`server.py`) into clean modules
-- Improve testability and scalability
-- Own and implement LLM features with better abstraction
-- Implement backend services
-
-🔄 You can find the **main repo and production branch** managed by **Smit** 🔗 https://github.com/Barabari-Project/Samvad-Sathi-AI.
+├── requirements.txt         # Dependencies
+├── .env                     # Env variable template
+└── README.md                # ← You are here
 
 
+🛠 What Each Module Does  
 
-## 👩‍💻 Contributor
+| Path | Purpose |
+|------|---------|
+| app/main.py | FastAPI entrypoint; mounts routes from all services. |
+| users/ | Manages user sign-up & profile. |
+| sessions/ | Handles login/logout & session tokens. |
+| interviews/ | Core interview workflow – create session, generate questions, record answers. |
+| reports/ | Generates summary reports (feedback, scores, improvement tips). |
+| core/llm.py | Wrapper around LLM APIs (OpenAI, etc.). |
+| core/sqs.py | Queue handling (async processing with workers). |
+| workers/ | Long-running background tasks – transcription, analysis. |
+| prompts/ | All reusable LLM prompt templates. |
 
-**Asiya Farhath** — Digital Excellence Manager at Barabari  
-Maintaining clean, production-grade backend with AI integrations.
+
+2. High-Level Flow  
+
+1.Sign Up & Login
+   - User creates account (via email or Google).  
+   - Session service issues token for authentication.  
+
+2.Interview Session Creation  
+   - User selects job role / interview type.  
+   - Backend creates an `Interview` object and starts an interview attempt.  
+
+3.Question Generation 
+   - LLM generates questions tailored to role & resume.  
+   - Questions are sent one by one to the user.  
+
+4.Answer Capture
+   - User answers via audio.  
+   - Audio → transcribed → analyzed (pacing, pauses, content relevance).  
+
+5.Analysis & Feedback 
+   - Workers process transcription & analysis jobs via SQS.  
+   - Feedback stored as `QuestionAttempt` + aggregated.  
+
+6.Final Report
+   - Once interview ends → system generates a detailed performance report.  
+   - Includes strengths, weaknesses, scores, and improvement tips.  
+
+7.Drop-Off Handling
+   - If user leaves midway, progress is saved in `InterviewAttempt`.  
+   - They can resume later without losing data.  
+
+3. Running Locally  
+
+  1.Setup Environment  
+
+    python -m venv .venv && source .venv/bin/activate
+    pip install -r requirements.txt
+
+  2.Configure Env Variables
+  DATABASE_URL=postgresql+psycopg2://user:password@localhost:5432/samvaad
+  OPENAI_API_KEY=...
+  AWS_ACCESS_KEY_ID=...
+  AWS_SECRET_ACCESS_KEY=...
+
+  3.Start API Server
+  uvicorn app.main:app --reload
+
+  4.Explore APIs
+  Swagger Docs → http://localhost:8000/docs
+
+📌 Notes
+
+This branch is part of the main Samvaad Saathi repo 
+Main repo 🔗 https://github.com/Barabari-Project/Samvad-Sathi-AI. 
+
 

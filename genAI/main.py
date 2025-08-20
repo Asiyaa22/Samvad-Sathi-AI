@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from users.routes import router as users_router
 from sessions.routes import router as sessions_router
 from interviews.routes import router as interviews_router
+from reports.routes import router as report_router
 
 app = FastAPI()
 
@@ -14,6 +15,10 @@ app.include_router(sessions_router, prefix="/sessions")
 #include interview routers
 app.include_router(interviews_router, prefix="/api/interviews")
 # app.include_router(interview_router, prefix="/interview", tags=["Interview"])
+
+
+app.include_router(report_router)
+
 
 # root route
 @app.get("/")
