@@ -60,20 +60,18 @@ The backend is built with **FastAPI + PostgreSQL**, powered by **LLM-based analy
 
 | Path | Purpose |
 |------|---------|
-| **app/main.py** | FastAPI entrypoint; mounts routes from all services. |
-| **users/** | Manages user sign-up & profile. |
-| **sessions/** | Handles login/logout & session tokens. |
-| **interviews/** | Core interview workflow – create session, generate questions, record answers. |
-| **reports/** | Generates summary reports (feedback, scores, improvement tips). |
-| **core/llm.py** | Wrapper around LLM APIs (OpenAI, etc.). |
-| **core/sqs.py** | Queue handling (async processing with workers). |
-| **workers/** | Long-running background tasks – transcription, analysis. |
-| **prompts/** | All reusable LLM prompt templates. |
-| **alembic/** | DB migration scripts. |
+| app/main.py | FastAPI entrypoint; mounts routes from all services. |
+| users/ | Manages user sign-up & profile. |
+| sessions/ | Handles login/logout & session tokens. |
+| interviews/ | Core interview workflow – create session, generate questions, record answers. |
+| reports/ | Generates summary reports (feedback, scores, improvement tips). |
+| core/llm.py | Wrapper around LLM APIs (OpenAI, etc.). |
+| core/sqs.py | Queue handling (async processing with workers). |
+| workers/ | Long-running background tasks – transcription, analysis. |
+| prompts/ | All reusable LLM prompt templates. |
 
----
 
-## 🔄 High-Level Flow  
+2. High-Level Flow  
 
 1. **Sign Up & Login**  
    - User creates account (via email or Google).  
