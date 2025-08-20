@@ -9,6 +9,7 @@ The backend is built with **FastAPI + PostgreSQL**, powered by **LLM-based analy
 ---
 
 ## 📂 Directory Structure  
+```
 ├── app/
 │ ├── main.py           # FastAPI entrypoint
 │ │
@@ -52,7 +53,7 @@ The backend is built with **FastAPI + PostgreSQL**, powered by **LLM-based analy
 ├── requirements.txt    # Dependencies
 ├── .env                # Env variable template
 └── README.md           # ← You are here
-
+```
 
 ---
 
@@ -71,7 +72,7 @@ The backend is built with **FastAPI + PostgreSQL**, powered by **LLM-based analy
 | prompts/ | All reusable LLM prompt templates. |
 
 
-2. High-Level Flow  
+## 2. High-Level Flow  
 
 1. **Sign Up & Login**  
    - User creates account (via email or Google).  
