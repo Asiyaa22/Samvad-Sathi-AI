@@ -2,7 +2,7 @@
 
 import time
 import json
-from core.sqs import receive_message_from_analysis_queue, delete_message_from_queue
+from core.analysis_sqs import publish_to_analysis_queue
 from core.llm import transcribe_audio, analyse_answer
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine
@@ -68,7 +68,7 @@ def run_worker():
     print("🟡 Analysis Worker started... polling for messages")
 
     while True:
-        messages = receive_message_from_analysis_queue()
+        messages = publish_to_analysis_queue()
 
         # 💤 If no messages, wait and retry
         if not messages:
@@ -83,7 +83,7 @@ def run_worker():
             process_message(body)
 
             # 🧹 Delete message from queue to avoid reprocessing
-            delete_message_from_queue(receipt_handle)
+            # delete_message_from_queue(receipt_handle)
 
 # 🏁 Entry point
 if __name__ == "__main__":

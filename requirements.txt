@@ -6,3 +6,5 @@ deepgram-sdk
 openai
 g2p-en
 sqlalchemy
+boto3
+psycopg2-binary

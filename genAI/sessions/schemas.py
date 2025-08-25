@@ -18,4 +18,4 @@ class SessionEndRequest(BaseModel):
 class SessionEndResponse(BaseModel):
     message: str
     session_id: int
-    logout_time: str
+    logout_time: datetime
